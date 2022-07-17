@@ -36,7 +36,3 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 Route::post('/login', [LoginController::class, 'login']);
-
-// Route::get('/test', function () {
-//     return response()->json(['message' => 'Hello World!']);
-// });
