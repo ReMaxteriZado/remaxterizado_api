@@ -16,14 +16,36 @@ class LinksController extends Controller
      */
     public function index(Request $request)
     {
-        $links = Link::where('title', 'like', "%$request->search%")
-            ->orWhere('link', 'like', "%$request->search%")
-            ->orWhere('tags', 'like', "%$request->search%")
-            ->orWhereHas('category', function ($query) use ($request) {
-                $query->where('name', 'like', "%$request->search%");
-            })->with('category.parent')->get();
+        $pagination = json_decode($request->pagination);
+        $links = Link::with('category.parent');
 
-        return $links;
+        if (!empty($request->title)) {
+            $links->where('title', 'like', "%$request->title%");
+        }
+
+        if (!empty($request->tags)) {
+            $links->where('tags', 'like', "%$request->tags%");
+        }
+
+        if (!empty($request->link)) {
+            $links->where('link', 'like', "%$request->link%");
+        }
+
+        if (!empty($request->category)) {
+            $links->whereHas('category', function ($query) use ($request) {
+                $query->where('name', 'like', "%$request->category%");
+            });
+        }
+
+        $total = $links->count();
+
+        if ($pagination->rows != 0) {
+            $links = $links->skip($pagination->rows * $pagination->currentPage)->take($pagination->rows);
+        }
+
+        $links = $links->get();
+
+        return response()->json(['links' => $links, 'total' => $total]);
     }
 
     private function validateLink(Request $request)
