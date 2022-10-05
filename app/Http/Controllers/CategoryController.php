@@ -23,7 +23,7 @@ class CategoryController extends Controller
             ->with('relatedCategories', 'links', 'parent')
             ->get();
 
-        return $categories;
+        return response()->json(['categories' => $categories]);
     }
 
     private function validateCategory(Request $request)

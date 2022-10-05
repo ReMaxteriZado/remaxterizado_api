@@ -5,6 +5,7 @@ use App\Http\Controllers\CodesController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LinksController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::post('/check-user-admin', [LoginController::class, 'checkUserAdmin']);
+    Route::post('/check-user-role', [UserController::class, 'checkUserRole']);
 
     // Dashboard
     Route::get('/stats', [DashboardController::class, 'getStats']);
@@ -29,6 +30,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Links
     Route::apiResource('links', LinksController::class);
+    Route::delete('links-multiple', [LinksController::class, 'destroyMultiple']);
     Route::post('/links/incremet-views/{id}', [LinksController::class, 'incrementViews']);
 
     // Codes

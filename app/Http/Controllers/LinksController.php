@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Link;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 
 class LinksController extends Controller
 {
@@ -17,6 +16,7 @@ class LinksController extends Controller
     public function index(Request $request)
     {
         $pagination = json_decode($request->pagination);
+
         $links = Link::with('category.parent');
 
         if (!empty($request->title)) {
@@ -52,11 +52,8 @@ class LinksController extends Controller
     {
         $request->validate([
             'title' => 'required|min:3|max:255',
-            'link' => 'required|min:3|max:255|url',
-            'category_id' => ['required', Rule::exists('categories', 'id')],
-        ], [
-            'category_id.required' => 'The category is required',
-            'category_id.exists' => 'The category does not exists',
+            'link' => 'required|url',
+            'category_id' => 'required|exists:categories,id',
         ]);
     }
 
@@ -75,9 +72,7 @@ class LinksController extends Controller
 
             $link = new Link();
 
-            $link->title = $request->title;
-            $link->category_id = $request->category_id;
-            $link->link = $request->link;
+            $link->fill($request->only($link->getFillable()));
             $link->tags = json_encode($request->tags);
 
             $link->save();
@@ -100,16 +95,16 @@ class LinksController extends Controller
     public function update(Request $request, $id)
     {
         $this->validateLink($request);
-        
+
         try {
             DB::beginTransaction();
 
             $link = Link::findOrFail($id);
 
-            $link->title = $request->title;
-            $link->category_id = $request->category_id;
-            $link->link = $request->link;
+            $link->fill($request->only($link->getFillable()));
             $link->tags = json_encode($request->tags);
+
+            $link->save();
 
             $link->save();
 
@@ -143,15 +138,37 @@ class LinksController extends Controller
         }
     }
 
+    public function destroyMultiple(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $links = Link::whereIn('id', $request->ids)->get();
+
+            foreach ($links as $link) {
+                $link->delete();
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Link deleted successfully',
+            ], 200);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
+        }
+    }
+
     public function incrementViews($id)
     {
         try {
             $link = Link::findOrFail($id);
-    
+
             $link->views = $link->views + 1;
-    
+
             $link->save();
-    
+
             return response()->json(['success' => true], 200);
         } catch (\Throwable $th) {
             throw $th;
