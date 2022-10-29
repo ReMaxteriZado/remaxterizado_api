@@ -3,6 +3,7 @@
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CodesController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DemoController;
 use App\Http\Controllers\LinksController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\UserController;
@@ -27,6 +28,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Categories
     Route::apiResource('categories', CategoryController::class);
+
+    // Demo
+    Route::apiResource('demo', DemoController::class);
 
     // Links
     Route::apiResource('links', LinksController::class);

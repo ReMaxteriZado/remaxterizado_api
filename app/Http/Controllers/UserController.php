@@ -10,6 +10,7 @@ class UserController extends Controller
     public function checkUserRole(Request $request)
     {
         $user = $this->checkUser($request);
+        
         if ($user) {
             return response()->json(['user' => $user], 200);
         } else {

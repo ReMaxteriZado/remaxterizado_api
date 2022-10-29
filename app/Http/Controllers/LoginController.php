@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
-
     public function login(Request $request)
     {
         $request->validate([
@@ -18,9 +17,9 @@ class LoginController extends Controller
 
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             $auth = Auth::user();
-            $success['token'] =  $auth->createToken('LaravelSanctumAuth')->plainTextToken;
+            $token =  $auth->createToken('LaravelSanctumAuth')->plainTextToken;
 
-            return response()->json($success, 200);
+            return response()->json(['user' => $auth, 'token' => $token], 200);
         } else {
             return response()->json(['message' => 'These credentials do not match our records'], 422);
         }

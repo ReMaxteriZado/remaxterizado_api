@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Link;
+use App\Models\Demo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
-class LinksController extends Controller
+class DemoController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -18,43 +18,42 @@ class LinksController extends Controller
     {
         $pagination = json_decode($request->pagination);
 
-        $links = Link::with('category.parent');
+        $demos = Demo::query();
 
         if (!empty($request->title)) {
-            $links->where('title', 'like', "%$request->title%");
-        }
-
-        if (!empty($request->tags)) {
-            $links->where('tags', 'like', "%$request->tags%");
-        }
-
-        if (!empty($request->link)) {
-            $links->where('link', 'like', "%$request->link%");
+            $demos->where('title', 'like', "%$request->title%");
         }
 
         if (!empty($request->category)) {
-            $links->whereHas('category', function ($query) use ($request) {
+            $demos->whereHas('category', function ($query) use ($request) {
                 $query->where('name', 'like', "%$request->category%");
             });
         }
 
-        $total = $links->count();
-
-        if ($pagination->rows != 0) {
-            $links = $links->skip($pagination->rows * $pagination->currentPage)->take($pagination->rows);
+        if (!empty($request->date)) {
+            $demos->whereDate('date', $request->date);
         }
 
-        $links = $links->get();
+        $total = $demos->count();
 
-        return response()->json(['links' => $links, 'total' => $total]);
+        if (@$pagination->rows != 0) {
+            $demos = $demos->skip($pagination->rows * $pagination->currentPage)->take($pagination->rows);
+        }
+
+        $demos = $demos->get();
+
+        return response()->json(['demos' => $demos, 'total' => $total]);
     }
 
     private function valid(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'title' => 'required|min:3|max:255',
-            'link' => 'required|url',
-            'category_id' => 'required|exists:categories,id',
+            'demo' => 'required|url',
+            'category_id' => 'required|integer|exists:categories,id',
+            'new_form' => 'required',
+            'new_form.*.name' => 'required|min:3|max:255',
+            'new_form.*.lastname' => 'required|min:3|max:255',
         ]);
 
         return $validator;
@@ -77,12 +76,12 @@ class LinksController extends Controller
         try {
             DB::beginTransaction();
 
-            $link = new Link();
+            $demo = new Demo();
 
-            $link->fill($request->only($link->getFillable()));
-            $link->tags = json_encode($request->tags);
+            $demo->fill($request->only($demo->getFillable()));
+            $demo->tags = json_encode($request->tags);
 
-            $link->save();
+            $demo->save();
 
             DB::commit();
             return response()->json(['success' => true], 200);
@@ -110,12 +109,12 @@ class LinksController extends Controller
         try {
             DB::beginTransaction();
 
-            $link = Link::findOrFail($id);
+            $demo = Demo::findOrFail($id);
 
-            $link->fill($request->only($link->getFillable()));
-            $link->tags = json_encode($request->tags);
+            $demo->fill($request->only($demo->getFillable()));
+            $demo->tags = json_encode($request->tags);
 
-            $link->save();
+            $demo->save();
 
             DB::commit();
             return response()->json(['success' => true], 200);
@@ -136,9 +135,9 @@ class LinksController extends Controller
         try {
             DB::beginTransaction();
 
-            $link = Link::findOrFail($id);
+            $demo = Demo::findOrFail($id);
 
-            $link->delete();
+            $demo->delete();
 
             DB::commit();
         } catch (\Exception $e) {
@@ -152,34 +151,19 @@ class LinksController extends Controller
         try {
             DB::beginTransaction();
 
-            $links = Link::whereIn('id', $request->ids)->get();
+            $demos = Demo::whereIn('id', $request->ids)->get();
 
-            foreach ($links as $link) {
-                $link->delete();
+            foreach ($demos as $demo) {
+                $demo->delete();
             }
 
             DB::commit();
 
             return response()->json([
-                'message' => 'Link deleted successfully',
+                'message' => 'Demo deleted successfully',
             ], 200);
         } catch (\Throwable $th) {
             DB::rollBack();
-            throw $th;
-        }
-    }
-
-    public function incrementViews($id)
-    {
-        try {
-            $link = Link::findOrFail($id);
-
-            $link->views++;
-
-            $link->save();
-
-            return response()->json(['success' => true], 200);
-        } catch (\Throwable $th) {
             throw $th;
         }
     }
