@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Code;
 use App\Models\Link;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -139,9 +140,13 @@ class LinksController extends Controller
 
             $link = Link::findOrFail($id);
 
+            Code::where('link_id', $link->id)->delete();
+
             $link->delete();
 
             DB::commit();
+
+            return response()->json(['success' => true], 200);
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;

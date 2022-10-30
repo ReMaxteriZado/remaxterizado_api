@@ -20,23 +20,28 @@ class CodesController extends Controller
 
         $codes = Code::with('link.category');
 
-        if (!empty($request->link)) {
+        if (!empty($request->title)) {
             $codes->whereHas('link', function ($query) use ($request) {
-                $query->where('title', 'like', "%$request->link%")
-                    ->orWhere('link', 'like', "%$request->link%");
+                $query->where('title', 'like', "%$request->title%")
+                ->orWhere('link', 'like', "%$request->title%");
             });
         }
 
-        if (!empty($request->title)) {
-            $codes->where('title', 'like', "%$request->title%");
+        if (!empty($request->link)) {
+            $codes->whereHas('link', function ($query) use ($request) {
+                $query->where('title', 'like', "%$request->link%")
+                ->orWhere('link', 'like', "%$request->link%");
+            });
         }
 
-        if (!empty($request->code)) {
-            $codes->where('code', 'like', "%$request->code%");
+        if (!empty($request->category)) {
+            $codes->whereHas('link.category', function ($query) use ($request) {
+                $query->where('name', 'like', "%$request->category%");
+            });
         }
 
-        if (!empty($request->tags)) {
-            $codes->where('tags', 'like', "%$request->tags%");
+        if (!empty($request->language)) {
+            $codes->where('language', $request->language);
         }
 
         $total = $codes->count();
