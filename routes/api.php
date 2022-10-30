@@ -42,4 +42,5 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Codes
     Route::apiResource('codes', CodesController::class);
+    Route::delete('codes-multiple', [CodesController::class, 'destroyMultiple']);
 });
