@@ -10,6 +10,13 @@ class Code extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'link_id',
+        'language',
+        'comment',
+        'code',
+    ];
+
     public function link()
     {
         return $this->belongsTo(Link::class);

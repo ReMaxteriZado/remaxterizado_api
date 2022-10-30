@@ -20,8 +20,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Auth routes
+Route::post('/login', [LoginController::class, 'login']);
+
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::post('/check-user-role', [UserController::class, 'checkUserRole']);
+    Route::post('/check-user-logged', [LoginController::class, 'checkUserLogged']);
 
     // Dashboard
     Route::get('/stats', [DashboardController::class, 'getStats']);
@@ -40,5 +43,3 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Codes
     Route::apiResource('codes', CodesController::class);
 });
-
-Route::post('/login', [LoginController::class, 'login']);

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Code;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Validator;
 
 class CodesController extends Controller
 {
@@ -16,27 +16,50 @@ class CodesController extends Controller
      */
     public function index(Request $request)
     {
-        $codes = Code::whereHas('link', function ($query) use ($request) {
-            $query->where('title', 'like', "%$request->search%");
-        })
-            ->orWhereHas('link.category', function ($query) use ($request) {
-                $query->where('name', 'like', "%$request->search%");
-            })
-            ->with('link.category')->get();
+        $pagination = json_decode($request->pagination);
 
-        return $codes;
+        $codes = Code::with('link.category');
+
+        if (!empty($request->link)) {
+            $codes->whereHas('link', function ($query) use ($request) {
+                $query->where('title', 'like', "%$request->link%")
+                    ->orWhere('link', 'like', "%$request->link%");
+            });
+        }
+
+        if (!empty($request->title)) {
+            $codes->where('title', 'like', "%$request->title%");
+        }
+
+        if (!empty($request->code)) {
+            $codes->where('code', 'like', "%$request->code%");
+        }
+
+        if (!empty($request->tags)) {
+            $codes->where('tags', 'like', "%$request->tags%");
+        }
+
+        $total = $codes->count();
+
+        if ($pagination->rows != 0) {
+            $codes = $codes->skip($pagination->rows * $pagination->currentPage)->take($pagination->rows);
+        }
+
+        $codes = $codes->get();
+
+        return response()->json(['codes' => $codes, 'total' => $total]);
     }
 
-    private function validateCode(Request $request)
+    private function valid(Request $request)
     {
-        $request->validate([
-            'code' => 'required|min:3',
-            'code_language' => 'required',
-            'link_id' => ['required', Rule::exists('links', 'id')],
-        ], [
-            'link_id.required' => 'The link is required',
-            'link_id.exists' => 'The link does not exists',
+        $validator = Validator::make($request->all(), [
+            'link_id' => 'required|exists:links,id',
+            'language' => 'required|string|min:1',
+            'comment' => 'nullable|min:3',
+            'code' => 'required|min:1',
         ]);
+
+        return $validator;
     }
 
     /**
@@ -47,17 +70,18 @@ class CodesController extends Controller
      */
     public function store(Request $request)
     {
-        $this->validateCode($request);
+        $validator = $this->valid($request);
+
+        if ($validator->errors()->any()) {
+            return response()->json($validator->errors(), 400);
+        }
 
         try {
             DB::beginTransaction();
 
             $code = new Code();
 
-            $code->link_id = $request->link_id;
-            $code->code = $request->code;
-            $code->language = $request->code_language;
-            $code->comment = $request->comment;
+            $code->fill($request->only($code->getFillable()));
 
             $code->save();
 
@@ -78,17 +102,18 @@ class CodesController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $this->validateCode($request);
+        $validator = $this->valid($request);
+
+        if ($validator->errors()->any()) {
+            return response()->json($validator->errors(), 400);
+        }
 
         try {
             DB::beginTransaction();
 
             $code = Code::findOrFail($id);
 
-            $code->link_id = $request->link_id;
-            $code->code = $request->code;
-            $code->language = $request->code_language;
-            $code->comment = $request->comment;
+            $code->fill($request->only($code->getFillable()));
 
             $code->save();
 
@@ -119,6 +144,43 @@ class CodesController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;
+        }
+    }
+
+    public function destroyMultiple(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $codes = Code::whereIn('id', $request->ids)->get();
+
+            foreach ($codes as $code) {
+                $code->delete();
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Code deleted successfully',
+            ], 200);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
+        }
+    }
+
+    public function incrementViews($id)
+    {
+        try {
+            $code = Code::findOrFail($id);
+
+            $code->views++;
+
+            $code->save();
+
+            return response()->json(['success' => true], 200);
+        } catch (\Throwable $th) {
+            throw $th;
         }
     }
 }

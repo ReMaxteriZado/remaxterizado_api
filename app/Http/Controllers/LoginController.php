@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -25,12 +26,21 @@ class LoginController extends Controller
         }
     }
 
-    public function checkUserAdmin()
-    {
-        if (Auth::check()) {
-            return response()->json(['is_amdin' => Auth::user()->isAdmin(), 'user' => Auth::user()], 200);
+    public function checkUserLogged(Request $request) {
+        $token = $token = $request->user()->currentAccessToken();
+        $user = $token->tokenable;
+
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        $user = User::find($user->id);
+
+        if ($user) {
+            return response()->json(['user' => $user], 200);
         } else {
-            return response()->json(['user_not_logged' => true]);
+            return response()->json(['message' => 'User not found'], 404);
         }
     }
+
 }

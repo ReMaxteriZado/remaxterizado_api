@@ -131,6 +131,10 @@ $attributes = [
     'active' => 'activo',
     'title' => 'título',
     'link' => 'enlace',
+    'link_id' => 'enlace',
+    'category_id' => 'categoría',
+    'comment' => 'comentario',
+    'code' => 'código',
 ];
 
 $messages['attributes'] = $attributes;
