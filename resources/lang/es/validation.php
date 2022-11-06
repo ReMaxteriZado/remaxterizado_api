@@ -135,6 +135,7 @@ $attributes = [
     'category_id' => 'categoría',
     'comment' => 'comentario',
     'code' => 'código',
+    'image' => 'imagen',
 ];
 
 $messages['attributes'] = $attributes;

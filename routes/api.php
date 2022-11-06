@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DemoController;
 use App\Http\Controllers\LinksController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\SergioCategoryController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -42,4 +43,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Codes
     Route::apiResource('codes', CodesController::class);
     Route::delete('codes-multiple', [CodesController::class, 'destroyMultiple']);
+
+    // Sergio
+    // Categories
+    Route::apiResource('sergio-categories', SergioCategoryController::class);
+    Route::delete('sergio-categories-multiple', [SergioCategoryController::class, 'destroyMultiple']);
 });

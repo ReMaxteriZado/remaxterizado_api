@@ -3,13 +3,28 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class FileController extends Controller
 {
-    public function store($model, $folder, $file)
+    public function store($model, $folder, $file, $table = null)
     {
-        $prependFileName = $folder . "_" . $model->id . "_";
+        $model_id = null;
+
+        if ($model == null) {
+            $model = DB::table($table)->latest('id')->first();
+
+            if ($model != null) {
+                $model_id = $model->id;
+            } else {
+                $model_id = 1;
+            }
+        } else {
+            $model_id = $model->id;
+        }
+
+        $prependFileName = $folder . "_" . $model_id . "_";
         $base64 = $this->getFileDataFromBase64($file);
 
         $fileName = $prependFileName . $file['name'];
@@ -36,6 +51,15 @@ class FileController extends Controller
             'fileData' => $model->file,
             'fileName' => $model->file_name,
         ], 200);
+    }
+
+    public function deleteFile($folder, $fileName)
+    {
+        if (Storage::exists("$folder/$fileName")) {
+            Storage::delete("$folder/$fileName");
+        }
+
+        return 'file deleted';
     }
 
     private function getFileDataFromBase64($file)
