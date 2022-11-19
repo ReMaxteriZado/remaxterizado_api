@@ -13,7 +13,6 @@ class SergioSubCategory extends Model
 
     protected $fillable = [
         'name',
-        'image',
         'category_id',
     ];
 
