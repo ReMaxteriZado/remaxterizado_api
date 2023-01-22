@@ -74,7 +74,7 @@ class RoleController extends Controller
             $role->save();
 
             foreach ($request->all() as $param) {
-                lad($param);
+                dd($param);
             }
 
             DB::commit();

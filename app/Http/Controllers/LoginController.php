@@ -20,7 +20,7 @@ class LoginController extends Controller
             $auth = Auth::user();
             $token =  $auth->createToken('LaravelSanctumAuth')->plainTextToken;
 
-            return response()->json(['user' => $auth, 'token' => $token], 200);
+            return response()->json(['token' => $token, 'user' => $auth], 200);
         } else {
             return response()->json(['message' => 'These credentials do not match our records'], 422);
         }
