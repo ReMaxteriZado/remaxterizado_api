@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Role;
+use App\Models\RolePermission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -18,7 +19,7 @@ class RoleController extends Controller
     {
         $pagination = json_decode($request->pagination);
 
-        $roles = Role::query();
+        $roles = Role::with('permissions');
 
         if (!empty($request->name)) {
             $roles->where('name', 'like', "%$request->name%");
@@ -73,8 +74,17 @@ class RoleController extends Controller
 
             $role->save();
 
-            foreach ($request->all() as $param) {
-                dd($param);
+            foreach ($request->permissions as $permission) {
+                $rolePermission = new RolePermission();
+
+                $rolePermission->role_id = $role->id;
+                $rolePermission->permission_id = $permission['id'];
+                $rolePermission->create = @$permission['create'] ? $permission['create'] : false;
+                $rolePermission->read = @$permission['read'] ? $permission['read'] : false;
+                $rolePermission->update = @$permission['update'] ? $permission['update'] : false;
+                $rolePermission->delete = @$permission['delete'] ? $permission['delete'] : false;
+
+                $rolePermission->save();
             }
 
             DB::commit();
@@ -108,6 +118,21 @@ class RoleController extends Controller
             $role->fill($request->only($role->getFillable()));
 
             $role->save();
+
+            RolePermission::where('role_id', $role->id)->delete();
+
+            foreach ($request->permissions as $permission) {
+                $rolePermission = new RolePermission();
+
+                $rolePermission->role_id = $role->id;
+                $rolePermission->permission_id = $permission['id'];
+                $rolePermission->create = @$permission['create'] ? $permission['create'] : false;
+                $rolePermission->read = @$permission['read'] ? $permission['read'] : false;
+                $rolePermission->update = @$permission['update'] ? $permission['update'] : false;
+                $rolePermission->delete = @$permission['delete'] ? $permission['delete'] : false;
+
+                $rolePermission->save();
+            }
 
             DB::commit();
             return response()->json(['success' => true], 200);
