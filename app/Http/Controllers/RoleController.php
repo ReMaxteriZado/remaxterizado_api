@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Code;
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
-class CodesController extends Controller
+class RoleController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -18,50 +18,33 @@ class CodesController extends Controller
     {
         $pagination = json_decode($request->pagination);
 
-        $codes = Code::with('link.category');
+        $roles = Role::query();
 
-        if (!empty($request->title)) {
-            $codes->whereHas('link', function ($query) use ($request) {
-                $query->where('title', 'like', "%$request->title%")
-                ->orWhere('link', 'like', "%$request->title%");
-            });
+        if (!empty($request->name)) {
+            $roles->where('name', 'like', "%$request->name%");
         }
 
-        if (!empty($request->link)) {
-            $codes->whereHas('link', function ($query) use ($request) {
-                $query->where('title', 'like', "%$request->link%")
-                ->orWhere('link', 'like', "%$request->link%");
-            });
+        if (!empty($request->slug)) {
+            $roles->where('slug', 'like', "%$request->slug%");
         }
 
-        if (!empty($request->category)) {
-            $codes->whereHas('link.category', function ($query) use ($request) {
-                $query->where('name', 'like', "%$request->category%");
-            });
-        }
-
-        if (!empty($request->language)) {
-            $codes->where('language', $request->language);
-        }
-
-        $total = $codes->count();
+        $total = $roles->count();
 
         if (@$pagination->rows != 0) {
-            $codes = $codes->skip($pagination->rows * $pagination->currentPage)->take($pagination->rows);
+            $roles = $roles->skip($pagination->rows * $pagination->currentPage)->take($pagination->rows);
         }
 
-        $codes = $codes->get();
+        $roles = $roles->get();
 
-        return response()->json(['codes' => $codes, 'total' => $total]);
+        return response()->json(['roles' => $roles, 'total' => $total]);
     }
 
     private function valid(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'link_id' => 'required|exists:links,id',
-            'language' => 'required|string|min:1',
-            'comment' => 'nullable|min:3',
-            'code' => 'required|min:1',
+            'name' => 'required|min:3|max:255',
+            'slug' => 'required|min:3|max:255',
+            'description' => 'nullable|min:3',
         ]);
 
         return $validator;
@@ -84,11 +67,11 @@ class CodesController extends Controller
         try {
             DB::beginTransaction();
 
-            $code = new Code();
+            $role = new Role();
 
-            $code->fill($request->only($code->getFillable()));
+            $role->fill($request->only($role->getFillable()));
 
-            $code->save();
+            $role->save();
 
             DB::commit();
             return response()->json(['success' => true], 200);
@@ -116,11 +99,11 @@ class CodesController extends Controller
         try {
             DB::beginTransaction();
 
-            $code = Code::findOrFail($id);
+            $role = Role::findOrFail($id);
 
-            $code->fill($request->only($code->getFillable()));
+            $role->fill($request->only($role->getFillable()));
 
-            $code->save();
+            $role->save();
 
             DB::commit();
             return response()->json(['success' => true], 200);
@@ -141,9 +124,9 @@ class CodesController extends Controller
         try {
             DB::beginTransaction();
 
-            $code = Code::findOrFail($id);
+            $role = Role::findOrFail($id);
 
-            $code->delete();
+            $role->delete();
 
             DB::commit();
         } catch (\Exception $e) {
@@ -157,34 +140,19 @@ class CodesController extends Controller
         try {
             DB::beginTransaction();
 
-            $codes = Code::whereIn('id', $request->ids)->get();
+            $roles = Role::whereIn('id', $request->ids)->get();
 
-            foreach ($codes as $code) {
-                $code->delete();
+            foreach ($roles as $role) {
+                $role->delete();
             }
 
             DB::commit();
 
             return response()->json([
-                'message' => 'Code deleted successfully',
+                'message' => 'Role deleted successfully',
             ], 200);
         } catch (\Throwable $th) {
             DB::rollBack();
-            throw $th;
-        }
-    }
-
-    public function incrementViews($id)
-    {
-        try {
-            $code = Code::findOrFail($id);
-
-            $code->views++;
-
-            $code->save();
-
-            return response()->json(['success' => true], 200);
-        } catch (\Throwable $th) {
             throw $th;
         }
     }

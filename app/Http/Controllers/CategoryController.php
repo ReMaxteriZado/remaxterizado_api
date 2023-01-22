@@ -30,9 +30,9 @@ class CategoryController extends Controller
     {
         $request->validate([
             'name' => 'required|min:3|max:255',
-            'category_id' => $request->category_id != null ? Rule::exists('categories', 'id') : '',
+            'parent_id' => $request->parent_id != null ? Rule::exists('categories', 'id') : '',
         ], [
-            'category_id.exists' => 'The parent category does not exists',
+            'parent_id.exists' => 'The parent category does not exists',
         ]);
     }
 
@@ -53,7 +53,7 @@ class CategoryController extends Controller
             $category = new Category();
 
             $category->name = $request->name;
-            $category->parent_id = $request->category_id;
+            $category->parent_id = $request->parent_id;
 
             $category->save();
 
@@ -80,15 +80,15 @@ class CategoryController extends Controller
     {
         $this->validateCategory($request);
 
-        if ($request->category_id != null && Category::find($request->category_id)->parent_id == $id) {
+        if ($request->parent_id != null && Category::find($request->parent_id)->parent_id == $id) {
             return response()->json([
-                'name' => 'The parent category cannot be a child category',
+                'parent_id' => 'La categoría padre no puede ser hija de una hija actual',
             ], 400);
         }
 
-        if ($request->category_id != null && $id == $request->category_id) {
+        if ($request->parent_id != null && $id == $request->parent_id) {
             return response()->json([
-                'name' => 'The parent category cannot be itself',
+                'parent_id' => 'La categoría padre no puede ser ella misma',
             ], 400);
         }
 
@@ -98,7 +98,7 @@ class CategoryController extends Controller
             $category = Category::find($id);
 
             $category->name = $request->name;
-            $category->parent_id = $request->category_id;
+            $category->parent_id = $request->parent_id;
 
             $category->save();
 
@@ -131,9 +131,9 @@ class CategoryController extends Controller
 
             foreach ($links as $link) {
                 if ($category->parent_id != null) {
-                    $link->category_id = $category->parent_id;
+                    $link->parent_id = $category->parent_id;
                 } else {
-                    $link->category_id = null;
+                    $link->parent_id = null;
                 }
 
                 $link->save();

@@ -41,7 +41,7 @@ class LinksController extends Controller
 
         $total = $links->count();
 
-        if ($pagination->rows != 0) {
+        if (@$pagination->rows != 0) {
             $links = $links->skip($pagination->rows * $pagination->currentPage)->take($pagination->rows);
         }
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DemoController;
 use App\Http\Controllers\LinksController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\RoleController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,8 +32,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Categories
     Route::apiResource('categories', CategoryController::class);
 
-    // Demo
-    Route::apiResource('demo', DemoController::class);
+    // Roles
+    Route::apiResource('roles', RoleController::class);
 
     // Links
     Route::apiResource('links', LinksController::class);
@@ -42,4 +43,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Codes
     Route::apiResource('codes', CodesController::class);
     Route::delete('codes-multiple', [CodesController::class, 'destroyMultiple']);
+
+    // Demos
+    Route::apiResource('demos', DemoController::class);
 });

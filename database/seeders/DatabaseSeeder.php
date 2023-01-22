@@ -1,5 +1,7 @@
 <?php
 
+use Database\Seeders\PermissionsSeeder;
+use Database\Seeders\RolesSeeder;
 use Database\Seeders\UsersSeeder;
 use Illuminate\Database\Seeder;
 
@@ -14,6 +16,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             UsersSeeder::class,
+            PermissionsSeeder::class,
+            RolesSeeder::class,
         ]);
     }
 }
