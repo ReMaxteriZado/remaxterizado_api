@@ -26,7 +26,8 @@ class LoginController extends Controller
         }
     }
 
-    public function checkUserLogged(Request $request) {
+    public function checkUserLogged(Request $request)
+    {
         $token = $token = $request->user()->currentAccessToken();
         $user = $token->tokenable;
 
@@ -42,5 +43,4 @@ class LoginController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
     }
-
 }

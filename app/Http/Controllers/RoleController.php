@@ -73,6 +73,10 @@ class RoleController extends Controller
 
             $role->save();
 
+            foreach ($request->all() as $param) {
+                lad($param);
+            }
+
             DB::commit();
             return response()->json(['success' => true], 200);
         } catch (\Exception $e) {
