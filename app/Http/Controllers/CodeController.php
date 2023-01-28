@@ -3,12 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Code;
-use App\Models\Link;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
-class LinksController extends Controller
+class CodeController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -19,44 +18,50 @@ class LinksController extends Controller
     {
         $pagination = json_decode($request->pagination);
 
-        $links = Link::with('category.parent');
+        $codes = Code::with('link.category');
 
         if (!empty($request->title)) {
-            $links->where('title', 'like', "%$request->title%");
-        }
-
-        if (!empty($request->category)) {
-            $links->whereHas('category', function ($query) use ($request) {
-                $query->where('name', 'like', "%$request->category%");
+            $codes->whereHas('link', function ($query) use ($request) {
+                $query->where('title', 'like', "%$request->title%")
+                    ->orWhere('link', 'like', "%$request->title%");
             });
         }
 
         if (!empty($request->link)) {
-            $links->where('link', 'like', "%$request->link%");
+            $codes->whereHas('link', function ($query) use ($request) {
+                $query->where('title', 'like', "%$request->link%")
+                    ->orWhere('link', 'like', "%$request->link%");
+            });
         }
 
-        if (!empty($request->tags)) {
-            $links->where('tags', 'like', "%$request->tags%");
+        if (!empty($request->category)) {
+            $codes->whereHas('link.category', function ($query) use ($request) {
+                $query->where('name', 'like', "%$request->category%");
+            });
         }
 
-        $total = $links->count();
+        if (!empty($request->language)) {
+            $codes->where('language', $request->language);
+        }
+
+        $total = $codes->count();
 
         if (@$pagination->rows != 0) {
-            $links = $links->skip($pagination->rows * $pagination->currentPage)->take($pagination->rows);
+            $codes = $codes->skip($pagination->rows * $pagination->currentPage)->take($pagination->rows);
         }
 
-        $links = $links->get();
+        $codes = $codes->get();
 
-        return response()->json(['links' => $links, 'total' => $total]);
+        return response()->json(['codes' => $codes, 'total' => $total]);
     }
 
     private function valid(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'title' => 'required|min:3|max:255',
-            'link' => 'required|url',
-            'tags' => 'nullable|array|min:1',
-            'category_id' => 'required|exists:categories,id',
+            'link_id' => 'required|exists:links,id',
+            'language' => 'required|string|min:1',
+            'comment' => 'nullable|min:3',
+            'code' => 'required|min:1',
         ]);
 
         return $validator;
@@ -79,12 +84,11 @@ class LinksController extends Controller
         try {
             DB::beginTransaction();
 
-            $link = new Link();
+            $code = new Code();
 
-            $link->fill($request->only($link->getFillable()));
-            $link->tags = $request->tags != null ? json_encode($request->tags) : null;
+            $code->fill($request->only($code->getFillable()));
 
-            $link->save();
+            $code->save();
 
             DB::commit();
             return response()->json(['success' => true], 200);
@@ -112,12 +116,11 @@ class LinksController extends Controller
         try {
             DB::beginTransaction();
 
-            $link = Link::findOrFail($id);
+            $code = Code::findOrFail($id);
 
-            $link->fill($request->only($link->getFillable()));
-            $link->tags = $request->tags != null ? json_encode($request->tags) : null;
+            $code->fill($request->only($code->getFillable()));
 
-            $link->save();
+            $code->save();
 
             DB::commit();
             return response()->json(['success' => true], 200);
@@ -138,15 +141,11 @@ class LinksController extends Controller
         try {
             DB::beginTransaction();
 
-            $link = Link::findOrFail($id);
+            $code = Code::findOrFail($id);
 
-            Code::where('link_id', $link->id)->delete();
-
-            $link->delete();
+            $code->delete();
 
             DB::commit();
-
-            return response()->json(['success' => true], 200);
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;
@@ -158,34 +157,19 @@ class LinksController extends Controller
         try {
             DB::beginTransaction();
 
-            $links = Link::whereIn('id', $request->ids)->get();
+            $codes = Code::whereIn('id', $request->ids)->get();
 
-            foreach ($links as $link) {
-                $link->delete();
+            foreach ($codes as $code) {
+                $code->delete();
             }
 
             DB::commit();
 
             return response()->json([
-                'message' => 'Link deleted successfully',
+                'message' => 'Code deleted successfully',
             ], 200);
         } catch (\Throwable $th) {
             DB::rollBack();
-            throw $th;
-        }
-    }
-
-    public function incrementViews($id)
-    {
-        try {
-            $link = Link::findOrFail($id);
-
-            $link->views++;
-
-            $link->save();
-
-            return response()->json(['success' => true], 200);
-        } catch (\Throwable $th) {
             throw $th;
         }
     }

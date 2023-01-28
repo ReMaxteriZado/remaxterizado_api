@@ -20,7 +20,9 @@ class LoginController extends Controller
             $auth = Auth::user();
             $token =  $auth->createToken('LaravelSanctumAuth')->plainTextToken;
 
-            return response()->json(['token' => $token, 'user' => $auth], 200);
+            $user = User::with('role.permissions.permission')->find($auth->id);
+
+            return response()->json(['token' => $token, 'user' => $user], 200);
         } else {
             return response()->json(['message' => 'These credentials do not match our records'], 422);
         }
@@ -35,7 +37,7 @@ class LoginController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
-        $user = User::find($user->id);
+        $user = User::with('role.permissions.permission')->find($user->id);
 
         if ($user) {
             return response()->json(['user' => $user], 200);

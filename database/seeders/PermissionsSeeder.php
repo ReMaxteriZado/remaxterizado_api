@@ -19,6 +19,7 @@ class PermissionsSeeder extends Seeder
             ["name" => "links", "slug" => "Enlaces"],
             ["name" => "codes", "slug" => "Códigos"],
             ["name" => "roles", "slug" => "Roles"],
+            ["name" => "users", "slug" => "Usuarios"],
         ];
 
         foreach ($permissions as $permission) {
