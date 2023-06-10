@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Storage;
 
 class FileController extends Controller
 {
-    public function store($model, $folder, $file, $table = null)
+    public function store($model, $folder, $file, $table = null, $disk = "local")
     {
         $model_id = null;
 
@@ -29,7 +29,9 @@ class FileController extends Controller
 
         $fileName = $prependFileName . $file['name'];
 
-        Storage::put("$folder/$fileName", base64_decode($base64));
+        $fileName = str_replace('/', '_', $fileName);
+
+        Storage::disk($disk)->put("$folder/$fileName", base64_decode($base64));
 
         return $fileName;
     }
