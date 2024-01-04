@@ -9,6 +9,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ZaidaWebsiteController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,6 +25,9 @@ use Illuminate\Support\Facades\Route;
 
 // Auth routes
 Route::post('/login', [LoginController::class, 'login']);
+
+// Zaida website
+Route::post('/contact-form', [ZaidaWebsiteController::class, 'sendContactEmail']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/check-user-logged', [LoginController::class, 'checkUserLogged']);
