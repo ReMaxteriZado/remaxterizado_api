@@ -44,18 +44,15 @@ class ContactForm extends Notification
      */
     public function toMail($notifiable)
     {
-        Log::info($this->data['details']);
-        return (new MailMessage)
-                    ->from('website@zaidabg.com', 'Zaida Betancor Guerra')
-                    ->subject('Solicitud de contacto')
-                    ->greeting('¡Hola!')
-                    ->line('Se ha enviado un correo solicitnado información sobre una sesión con los siguientes datos:')
-                    ->line('Nombre: ' . $this->data['name'])
-                    ->line('Teléfono: ' . $this->data['phone'])
-                    ->line('Tipo de evento: ' . $this->data['eventType'])
-                    ->line('Fecha del evento: ' . $this->data['eventDate'])
-                    ->line('Mensaje: ' . $this->data['details'])
-                    ->salutation('Un saludo');
+        return (new MailMessage)->view(
+            'emails.ZaidaContact', [
+                'name' => $this->data['name'],
+                'phone' => $this->data['phone'],
+                'eventType' => $this->data['eventType'],
+                'eventDate' => $this->data['eventDate'],
+                'details' => $this->data['details'],
+            ]
+        );
     }
 
     /**
